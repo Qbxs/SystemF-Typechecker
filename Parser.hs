@@ -7,10 +7,10 @@ keyword :: String -> Parser String
 keyword k = try $ string k
 
 term :: Parser Term
-term = abstraction
-   <|> tAbstraction
-   <|> application
-   <|> tApplication
+term = try abstraction
+   <|> try tAbstraction
+   <|> try application
+   <|> try tApplication
    <|> variable
 
 lambda :: Parser String
@@ -18,13 +18,13 @@ lambda = keyword "\\" <|> keyword "λ"
 
 variable :: Parser Term
 variable = do
-  str <- many lower
+  str <- many1 lower
   return $ Variable str
 
 abstraction :: Parser Term
 abstraction = do
   lambda
-  str <- many lower
+  str <- many1 lower
   spaces
   char ':'
   spaces
@@ -47,11 +47,11 @@ application = do
 tAbstraction :: Parser Term
 tAbstraction = do
   lambda
-  str <- many upper
+  str <- many1 upper
   char '.'
   spaces
   t <- term
-  return $ TypeAbstraction (read str) t
+  return $ TypeAbstraction str t
 
 tApplication :: Parser Term
 tApplication = do
@@ -71,7 +71,7 @@ typ = tFunc
 
 tVar :: Parser Type
 tVar = do
-  str <- many upper
+  str <- many1 upper
   return $ TypeVariable str
 
 tFunc :: Parser Type
@@ -90,7 +90,7 @@ tUniversal :: Parser Type
 tUniversal = do
   keyword "forall"
   spaces
-  str <- many upper
+  str <- many1 upper
   spaces
   keyword "."
   spaces
