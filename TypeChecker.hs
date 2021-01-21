@@ -15,9 +15,9 @@ data Term =
 instance Show Term where
   show (Variable var) = var
   show (Abstraction var typ t) = "λ" <> var <> ":" <> show typ <> "." <> show t
-  show (Application t1 t2) = "(" <> show t1 <> show t2 <> ")"
+  show (Application t1 t2) = "(" <> show t1 <> " " <> show t2 <> ")"
   show (TypeAbstraction var t) = "λ" <> var <> "." <> show t
-  show (TypeApplication t1 t2) = "(" <> show t1 <> show t2 <> ")"
+  show (TypeApplication t1 t2) = "(" <> show t1 <> " [" <> show t2 <> "])"
 
 
 data Type =
