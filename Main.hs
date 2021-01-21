@@ -3,11 +3,12 @@ module Main where
 import TypeChecker hiding (term, main)
 import Parser
 
+-- REPL (sort of)
 main :: IO ()
 main = do
   t <- getLine
   case parseTerm t of
     Left err -> print err >> main
-    Right term -> do
-      print term
-      print $ runTypeCheck term
+    Right term -> case evalTypeCheck term of
+        Left err -> putStrLn ("Cannot infere type of " <> show term) >> print err >> main
+        Right type' -> putStrLn (show term <> " : " <> show type') >> main

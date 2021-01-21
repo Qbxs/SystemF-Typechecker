@@ -80,6 +80,9 @@ runTypeCheck t = case evalState (runExceptT $ typeCheck t) M.empty of
                        Left err -> error $ "Can not infere type: " <> show err
                        Right typ -> typ
 
+evalTypeCheck :: Term -> Either ErrorType Type
+evalTypeCheck t = evalState (runExceptT $ typeCheck t) M.empty
+
 main :: IO ()
 main = mapM_ (print . runTypeCheck) [term]
 
