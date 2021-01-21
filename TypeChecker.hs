@@ -67,10 +67,12 @@ typeCheck (TypeAbstraction x t) = modify (M.insert x $ TypeVariable x)
                                 >> typeCheck t
                                 >>= \type2 -> return $ UniversalType x type2
 typeCheck (TypeApplication t typ) = typeCheck t
-                                  >>= \(UniversalType x t12) -> return $ subst typ x t12
+                                  >>= \t' -> case t' of
+                                    (UniversalType x t12) -> return $ subst typ x t12
+                                    _ -> throwError $ ArgMissmatch typ t'
                   where
                     subst :: Type -> String -> Type -> Type
-                    subst t s (TypeVariable str) | s == str  = TypeVariable s
+                    subst t s (TypeVariable str) | s == str  = t
                                                  | otherwise = TypeVariable str
                     subst t s (FunctionType t1 t2) = FunctionType (subst t s t1) (subst t s t2)
                     subst _ _ u@(UniversalType _ _) = u
