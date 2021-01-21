@@ -63,7 +63,9 @@ tApplication = do
   t <- term
   space
   spaces
+  keyword "["
   type' <- typ
+  keyword "]"
   keyword ")"
   return $ TypeApplication t type'
 
