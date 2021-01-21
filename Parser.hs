@@ -1,17 +1,21 @@
 module Parser (parseTerm) where
 
 import Text.ParserCombinators.Parsec
-import TypeChecker hiding (term)
+import TypeChecker (Term(..), Type(..))
+
+
+parseTerm :: String -> Either ParseError Term
+parseTerm = parse term "ParseError:"
 
 keyword :: String -> Parser String
 keyword k = try $ string k
 
 term :: Parser Term
-term = try abstraction
-   <|> try tAbstraction
-   <|> try application
-   <|> try tApplication
-   <|> variable
+term =  try abstraction
+    <|> try tAbstraction
+    <|> try application
+    <|> try tApplication
+    <|> variable
 
 lambda :: Parser String
 lambda = keyword "\\" <|> keyword "λ"
@@ -65,9 +69,9 @@ tApplication = do
 
 
 typ :: Parser Type
-typ = tFunc
-  <|> tUniversal
-  <|> tVar
+typ =  tFunc
+   <|> tUniversal
+   <|> tVar
 
 tVar :: Parser Type
 tVar = do
@@ -95,7 +99,4 @@ tUniversal = do
   keyword "."
   spaces
   type' <- typ
-  return $ UniversalType (read str :: String) type'
-
-parseTerm :: String -> Either ParseError Term
-parseTerm input = parse term "ParseError:" input
+  return $ UniversalType str type'

@@ -6,7 +6,7 @@ import Parser
 -- REPL (sort of)
 main :: IO ()
 main = do
-  t <- getLine
+  t <- putStr "λF> " >> getLine
   case parseTerm t of
     Left err -> print err >> main
     Right term -> case evalTypeCheck term of
