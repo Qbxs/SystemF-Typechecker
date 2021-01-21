@@ -64,7 +64,7 @@ typeCheck (Application t1 t2) = get
                               >>= \case
                                 (FunctionType type11' type12)
                                   -> when (type11 /= type11')
-                                    (throwError $ ArgMissmatch type11 type11')
+                                    (throwError $ ArgMissmatch type11' type11)
                                     >> return type12
                                 t -> throwError $ NoFuncInApplication t
   -- type11 <- typeCheck t2
