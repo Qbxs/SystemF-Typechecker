@@ -2,10 +2,10 @@
 
 
 ## identity
-`\X.\x:X.x`
+`λX.λx:X.x`
 
 ## functional extensionality
-`\a:A.((\X.\x:X.x [A]) a)`
+`λa:A.((λX.λx:X.x [A]) a)`
 
 ## self application
-`\x:forall X.(X->X).((x [forall X.(X->X)]) x)`
+`λx:∀X.(X->X).((x [∀X.(X->X)]) x)`
