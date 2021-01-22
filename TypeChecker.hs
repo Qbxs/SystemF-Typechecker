@@ -100,13 +100,32 @@ typeCheck (TypeApplication t typ)
 
 -- | Eval typechecker with empty context, no runtime exceptions
 evalTypeCheck :: Term -> Either ErrorType Type
-evalTypeCheck t = evalState (runExceptT $ typeCheck t) defaultCtx
+evalTypeCheck t = evalState (runExceptT $ typeCheck t) richCtx
 
 -- | Default context, from exercise 2
 defaultCtx :: M.Map String Type
 defaultCtx = M.fromList [("const", UniversalType "A" (UniversalType "B" (FunctionType (TypeVariable "A") (FunctionType (TypeVariable "B") (TypeVariable "A"))))),
                          ("Nat", TypeVariable "Nat"), -- ?
                          ("five", TypeVariable "Nat")]
+
+richCtx :: M.Map String Type
+richCtx = M.fromList [ ("id", UniversalType "A" (FunctionType (TypeVariable "A") (TypeVariable "A")))
+                     , ("Bool", bool)
+                     , ("true", bool)
+                     , ("false", bool)
+                     , ("not", FunctionType bool bool)
+                     , ("and", FunctionType bool (FunctionType bool bool))
+                     , ("or", FunctionType bool (FunctionType bool bool))
+                     , ("CNat", cnat)
+                     , ("cone", cnat)
+                     , ("ctwo", cnat)
+                     , ("cthree", cnat)
+                     , ("csucc", FunctionType cnat cnat)
+                     , ("cplus", FunctionType cnat (FunctionType cnat cnat))
+                     ] `M.union` defaultCtx
+      where cnat = UniversalType "X" (FunctionType (FunctionType (TypeVariable "X") (TypeVariable "X"))
+                                                   (FunctionType (TypeVariable "X") (TypeVariable "X")))
+            bool = UniversalType "X" (FunctionType (TypeVariable "X") (FunctionType (TypeVariable "X") (TypeVariable "X")))
 
 -------------------------------------------------------------------------------
 -- Examples/Mess
