@@ -78,10 +78,11 @@ typ =  tUniversal
 forall :: Parser String
 forall = keyword "forall" <|> keyword "∀"
 
+caseSensitive :: Parser String
+caseSensitive = upper >>= \c -> many letter >>= \str -> return $ c:str
+
 tVar :: Parser Type
-tVar = do
-  str <- many1 upper
-  return $ TypeVariable str
+tVar = TypeVariable <$> caseSensitive
 
 tFunc :: Parser Type
 tFunc = do
@@ -99,7 +100,7 @@ tUniversal :: Parser Type
 tUniversal = do
   forall
   spaces
-  str <- many1 upper
+  str <- caseSensitive
   spaces
   keyword "."
   spaces
