@@ -71,9 +71,12 @@ tApplication = do
 
 
 typ :: Parser Type
-typ =  tFunc
-   <|> tUniversal
+typ =  tUniversal
+   <|> tFunc
    <|> tVar
+
+forall :: Parser String
+forall = keyword "forall" <|> keyword "∀"
 
 tVar :: Parser Type
 tVar = do
@@ -94,7 +97,7 @@ tFunc = do
 
 tUniversal :: Parser Type
 tUniversal = do
-  keyword "forall"
+  forall
   spaces
   str <- many1 upper
   spaces
