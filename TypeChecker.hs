@@ -79,24 +79,32 @@ typeCheck (TypeAbstraction x t)
       modify (M.insert x $ TypeVariable x)
       type2 <- typeCheck t
       return $ UniversalType x type2
+typeCheck (TypeApplication t (TypeVariable var))
+    = do -- special case: look for var-def in ctx
+      ctx <- get
+      case M.lookup var ctx of
+        (Just typ1) -> typeCheck t >>= \typ' ->
+                       case typ' of
+                         (UniversalType x t12) -> return $ subst typ1 x t12
+                         _ -> throwError $ ArgMissmatch typ1 typ'
+        Nothing -> throwError $ UnBoundType $ TypeVariable var
 typeCheck (TypeApplication t typ)
-    = do -- validate that the type is in context, no present in typing rules
-      -- ctx <- get
-      -- unless (any (typ `inType`) $ M.elems ctx)
-      --       $ throwError $ UnBoundType typ
-      typ' <- typeCheck t
-      case typ' of
-        (UniversalType x t12) -> return $ subst typ x t12
-        _ -> throwError $ ArgMissmatch typ typ'
-  where -- | Substitute t for s in a type
-    subst :: Type -> String -> Type -> Type
-    subst t s (TypeVariable str) | s == str  = t
-                                 | otherwise = TypeVariable str
-    subst t s (FunctionType t1 t2) = FunctionType (subst t s t1) (subst t s t2)
-    subst t s (UniversalType var t') = UniversalType var $ subst t s t'
-    -- inType :: Type -> Type -> Bool
-    -- inType t (FunctionType t1 t2) = inType t t1 || inType t t2
-    -- inType t t' = t == t'
+    = typeCheck t >>= \typ' ->
+        case typ' of
+             (UniversalType x t12) -> return $ subst typ' x t12
+             _ -> throwError $ ArgMissmatch typ' typ
+
+-- | Substitute t for s in a type
+subst :: Type -> String -> Type -> Type
+subst t s (TypeVariable str) | s == str  = t
+                             | otherwise = TypeVariable str
+subst t s (FunctionType t1 t2) = FunctionType (subst t s t1) (subst t s t2)
+subst t s (UniversalType var t') | s == var  = UniversalType var t'
+                                 | otherwise = UniversalType var $ subst t s t'
+inType :: Type -> Type -> Bool
+inType t (FunctionType t1 t2) = inType t t1 || inType t t2
+inType t (UniversalType _ t') = inType t t'
+inType t t'                   = t == t'
 
 -- | Eval typechecker with empty context, no runtime exceptions
 evalTypeCheck :: Term -> Either ErrorType Type
