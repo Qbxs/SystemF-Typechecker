@@ -10,5 +10,8 @@
 ## self application
 `λx:∀X.(X->X).((x [∀X.(X->X)]) x)`
 
-## exercise 2 from assignment
+## exercise 1 from assignment
 `λC.(((const [Nat]) [C]) five)`
+
+## exercise 2 from assignment
+`\X.\f:forall Y.(Y -> Y).((f [(X -> X)]) (f [X]))`
