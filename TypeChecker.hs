@@ -91,7 +91,7 @@ typeCheck (TypeApplication t (TypeVariable var))
 typeCheck (TypeApplication t typ)
     = typeCheck t >>= \typ' ->
         case typ' of
-             (UniversalType x t12) -> return $ subst typ' x t12
+             (UniversalType x t12) -> return $ subst typ x t12
              _ -> throwError $ ArgMissmatch typ' typ
 
 -- | Substitute t for s in a type

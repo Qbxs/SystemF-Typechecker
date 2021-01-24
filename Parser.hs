@@ -10,6 +10,12 @@ parseTerm = parse term "ParseError:"
 keyword :: String -> Parser String
 keyword k = try $ string k
 
+forall :: Parser String
+forall = keyword "forall" <|> keyword "∀"
+
+caseSensitive :: Parser String
+caseSensitive = upper >>= \c -> many letter >>= \str -> return $ c:str
+
 term :: Parser Term
 term =  try abstraction
     <|> try tAbstraction
@@ -51,7 +57,7 @@ application = do
 tAbstraction :: Parser Term
 tAbstraction = do
   lambda
-  str <- many1 upper
+  str <- caseSensitive
   char '.'
   spaces
   t <- term
@@ -74,12 +80,6 @@ typ :: Parser Type
 typ =  tUniversal
    <|> tFunc
    <|> tVar
-
-forall :: Parser String
-forall = keyword "forall" <|> keyword "∀"
-
-caseSensitive :: Parser String
-caseSensitive = upper >>= \c -> many letter >>= \str -> return $ c:str
 
 tVar :: Parser Type
 tVar = TypeVariable <$> caseSensitive
