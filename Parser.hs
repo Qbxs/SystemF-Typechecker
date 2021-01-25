@@ -23,9 +23,9 @@ firstLower = lower >>= \c -> many alphaNum >>= \str -> return $ c:str
 
 
 term :: Parser Term
-term = choice [ abstraction
+term = choice [ try abstraction
               , tAbstraction
-              , application
+              , try application
               , tApplication
               , variable
               ]
