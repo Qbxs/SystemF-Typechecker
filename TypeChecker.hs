@@ -125,9 +125,9 @@ richCtx = M.fromList [ ("id", UniversalType "A" (FunctionType (TypeVariable "A")
                      , ("and", FunctionType bool (FunctionType bool bool))
                      , ("or", FunctionType bool (FunctionType bool bool))
                      , ("CNat", cnat)
-                     , ("cone", cnat)
-                     , ("ctwo", cnat)
-                     , ("cthree", cnat)
+                     , ("c0", cnat)
+                     , ("c1", cnat)
+                     , ("c2", cnat)
                      , ("csucc", FunctionType cnat cnat)
                      , ("cplus", FunctionType cnat (FunctionType cnat cnat))
                      ] `M.union` defaultCtx
@@ -136,7 +136,7 @@ richCtx = M.fromList [ ("id", UniversalType "A" (FunctionType (TypeVariable "A")
             bool = UniversalType "X" (FunctionType (TypeVariable "X") (FunctionType (TypeVariable "X") (TypeVariable "X")))
 
 -------------------------------------------------------------------------------
--- Examples/Mess
+-- | Examples/Mess
 
 -- | Run typechecker with empty context
 runTypeCheck :: Term -> Type
@@ -144,7 +144,7 @@ runTypeCheck t = case evalState (runExceptT $ typeCheck t) defaultCtx of
                        Left err -> error $ "Can not infere type: " <> show err
                        Right typ -> typ
 
-
+-- | Tests
 main :: IO ()
 main = mapM_ (print . runTypeCheck) [term,term']
 

@@ -1,40 +1,42 @@
 module Parser (parseTerm) where
 
 import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec.Char (alphaNum)
 import TypeChecker (Term(..), Type(..))
 
 
 parseTerm :: String -> Either ParseError Term
 parseTerm = parse term "ParseError:"
 
-keyword :: String -> Parser String
-keyword k = try $ string k
 
 forall :: Parser String
-forall = keyword "forall" <|> keyword "∀"
+forall = string "forall" <|> string "∀"
 
-caseSensitive :: Parser String
-caseSensitive = upper >>= \c -> many letter >>= \str -> return $ c:str
+lambda :: Parser Char
+lambda = char '\\' <|> char '\955'
+
+firstUpper :: Parser String
+firstUpper = upper >>= \c -> many alphaNum >>= \str -> return $ c:str
+
+firstLower :: Parser String
+firstLower = lower >>= \c -> many alphaNum >>= \str -> return $ c:str
+
 
 term :: Parser Term
-term =  try abstraction
-    <|> try tAbstraction
-    <|> try application
-    <|> try tApplication
-    <|> variable
-
-lambda :: Parser String
-lambda = keyword "\\" <|> keyword "λ"
+term = choice [ abstraction
+              , tAbstraction
+              , application
+              , tApplication
+              , variable
+              ]
 
 variable :: Parser Term
-variable = do
-  str <- many1 lower
-  return $ Variable str
+variable = Variable <$> firstLower
 
 abstraction :: Parser Term
 abstraction = do
   lambda
-  str <- many1 lower
+  str <- firstLower
   spaces
   char ':'
   spaces
@@ -46,18 +48,18 @@ abstraction = do
 
 application :: Parser Term
 application = do
-  keyword "("
+  char '('
   t1 <- term
   space
   spaces
   t2 <- term
-  keyword ")"
+  char ')'
   return $ Application t1 t2
 
 tAbstraction :: Parser Term
 tAbstraction = do
   lambda
-  str <- caseSensitive
+  str <- firstUpper
   char '.'
   spaces
   t <- term
@@ -65,44 +67,45 @@ tAbstraction = do
 
 tApplication :: Parser Term
 tApplication = do
-  keyword "("
+  char '('
   t <- term
   space
   spaces
-  keyword "["
+  optional $ char '['
   type' <- typ
-  keyword "]"
-  keyword ")"
+  optional $ char ']'
+  char ')'
   return $ TypeApplication t type'
 
 
 typ :: Parser Type
-typ =  tUniversal
-   <|> tFunc
-   <|> tVar
+typ = choice [ tUniversal
+             , tFunc
+             , tVar
+             ]
 
 tVar :: Parser Type
-tVar = TypeVariable <$> caseSensitive
+tVar = TypeVariable <$> firstUpper
 
 tFunc :: Parser Type
 tFunc = do
-  keyword "("
+  char '('
   type1 <- typ
   spaces
-  keyword "->"
+  string "->"
   spaces
   type2 <- typ
   spaces
-  keyword ")"
+  char ')'
   return $ FunctionType type1 type2
 
 tUniversal :: Parser Type
 tUniversal = do
   forall
   spaces
-  str <- caseSensitive
+  str <- firstUpper
   spaces
-  keyword "."
+  char '.'
   spaces
   type' <- typ
   return $ UniversalType str type'
