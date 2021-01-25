@@ -92,7 +92,7 @@ tFunc = do
   char '('
   type1 <- typ
   spaces
-  string "->"
+  string "->" <|> string "→"
   spaces
   type2 <- typ
   spaces
