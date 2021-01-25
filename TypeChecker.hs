@@ -48,6 +48,7 @@ instance Eq Type where
                 (b &&) <$> t2 `alphaEq` t4
           alphaEq (UniversalType v1 t1) (UniversalType v2 t2)
               = modify (M.insert v1 v2) >> t1 `alphaEq` t2
+          alphaEq _ _ = return False
 
 
 data ErrorType
