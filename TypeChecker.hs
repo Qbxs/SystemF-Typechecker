@@ -71,9 +71,7 @@ type Context a = ExceptT ErrorType (State (M.Map String Type)) a
 -- | Typecheck a term using state as current scope
 typeCheck :: Term -> Context Type
 typeCheck (Variable v)
-    = do
-      ctx <- get
-      case M.lookup v ctx of
+    = gets (M.lookup v) >>= \case
         Nothing -> throwError $ UnBoundVariable v
         (Just typ) -> return typ
 typeCheck (Abstraction v type1 t)
@@ -85,33 +83,30 @@ typeCheck (Application t1 t2)
     = do
       ctx <- get
       type11 <- typeCheck t2
-      put ctx
+      put ctx -- restore scope
       type1 <- typeCheck t1
       case type1 of
         (FunctionType type11' type12)
-                -> when (type11 /= type11')
-                  (throwError $ ArgMissmatch type11' type11)
-                  >> return type12
+                -> if type11 == type11'
+                   then return type12
+                   else throwError $ ArgMissmatch type11' type11
         t -> throwError $ NoFuncInApplication t
 typeCheck (TypeAbstraction x t)
     = do
       modify (M.insert x $ TypeVariable x)
       type2 <- typeCheck t
       return $ UniversalType x type2
-typeCheck (TypeApplication t (TypeVariable var))
-    = do -- special case: look for var-def in ctx to unfold definition
-      ctx <- get
-      case M.lookup var ctx of
+typeCheck (TypeApplication t (TypeVariable var)) -- special case: look for var-def in ctx to unfold definition
+    = gets (M.lookup var) >>= \case
         (Just typ1) -> typeCheck t >>= \typ' ->
                        case typ' of
                          (UniversalType x t12) -> return $ subst typ1 x t12
                          _ -> throwError $ ArgMissmatch typ1 typ'
         Nothing -> throwError $ UnBoundType $ TypeVariable var
 typeCheck (TypeApplication t typ)
-    = typeCheck t >>= \typ' ->
-        case typ' of
-             (UniversalType x t12) -> return $ subst typ x t12
-             _ -> throwError $ ArgMissmatch typ' typ
+    = typeCheck t >>= \typ' -> case typ' of
+        (UniversalType x t12) -> return $ subst typ x t12
+        _ -> throwError $ ArgMissmatch typ' typ
 
 -- | Substitute t for s in a type
 subst :: Type -> String -> Type -> Type
@@ -120,10 +115,7 @@ subst t s (TypeVariable str) | s == str  = t
 subst t s (FunctionType t1 t2) = FunctionType (subst t s t1) (subst t s t2)
 subst t s (UniversalType var t') | s == var  = UniversalType var t'
                                  | otherwise = UniversalType var $ subst t s t'
-inType :: Type -> Type -> Bool
-inType t (FunctionType t1 t2) = inType t t1 || inType t t2
-inType t (UniversalType _ t') = inType t t'
-inType t t'                   = t == t'
+
 
 -- | Eval typechecker with empty context, no runtime exceptions
 evalTypeCheck :: Term -> Either ErrorType Type
@@ -131,10 +123,13 @@ evalTypeCheck t = evalState (runExceptT $ typeCheck t) richCtx
 
 -- | Default context, from exercise 2
 defaultCtx :: M.Map String Type
-defaultCtx = M.fromList [("const", UniversalType "A" (UniversalType "B" (FunctionType (TypeVariable "A") (FunctionType (TypeVariable "B") (TypeVariable "A"))))),
-                         ("Nat", TypeVariable "Nat"), -- ?
-                         ("five", TypeVariable "Nat")]
+defaultCtx = M.fromList [ ("const", UniversalType "A" (UniversalType "B" (FunctionType
+                                    (TypeVariable "A") (FunctionType (TypeVariable "B") (TypeVariable "A")))))
+                        , ("Nat", TypeVariable "Nat")
+                        , ("five", TypeVariable "Nat")
+                        ]
 
+-- | Rich context, from slides
 richCtx :: M.Map String Type
 richCtx = M.fromList [ ("id", UniversalType "A" (FunctionType (TypeVariable "A") (TypeVariable "A")))
                      , ("Bool", bool)
