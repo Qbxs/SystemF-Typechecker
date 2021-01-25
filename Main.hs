@@ -1,6 +1,8 @@
 module Main where
 
 import System.Console.ANSI
+import Control.Monad (when)
+import System.Exit (exitSuccess)
 import TypeChecker hiding (term, main)
 import Parser
 
@@ -17,6 +19,7 @@ loop = do
   putStr "λF> "
   setSGR [Reset]
   t <- getLine
+  when (t == ":q") $ putStrLn "Bye Bye!" >> exitSuccess
   case parseTerm t of
     Left err -> print err >> loop
     Right term -> case evalTypeCheck term of
