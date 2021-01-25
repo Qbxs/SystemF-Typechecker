@@ -15,9 +15,7 @@ main = do
 -- | REPL (sort of)
 loop :: IO ()
 loop = do
-  setSGR [SetColor Foreground Vivid Blue]
-  putStr "λF> "
-  setSGR [Reset]
+  colorize Blue $ putStr "λF> "
   t <- getLine
   when (t == ":q") $ putStrLn "Bye Bye!" >> exitSuccess
   case parseTerm t of
@@ -25,14 +23,13 @@ loop = do
     Right term -> case evalTypeCheck term of
         Left err -> do
           putStrLn ("Cannot infere type of " <> show term)
-          setSGR [SetColor Foreground Vivid Red]
-          print err
-          setSGR [Reset]
+          colorize Red $ print err
           loop
         Right type' -> do
           putStr $ show term
-          setSGR [SetColor Foreground Vivid Green]
-          putStr " : "
-          setSGR [Reset]
+          colorize Green $ putStr " : "
           print type'
           loop
+
+colorize :: Color -> IO () -> IO ()
+colorize c m = setSGR [SetColor Foreground Vivid c] >> m >> setSGR [Reset]
