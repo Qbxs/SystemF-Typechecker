@@ -31,5 +31,6 @@ loop = do
           print type'
           loop
 
+-- | Set and reset color for a given IO-action
 colorize :: Color -> IO () -> IO ()
 colorize c m = setSGR [SetColor Foreground Vivid c] >> m >> setSGR [Reset]

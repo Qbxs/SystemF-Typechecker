@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module TypeChecker where
 
 import qualified Data.Map as M
@@ -24,12 +26,28 @@ data Type
    = TypeVariable String
    | FunctionType Type Type
    | UniversalType String Type
-  deriving (Eq, Ord)
+  deriving (Ord)
 
 instance Show Type where
   show (TypeVariable var) = var
   show (FunctionType t1 t2) = "(" <> show t1 <> " → " <> show t2 <> ")"
   show (UniversalType var t) = "∀" <> var <> "." <> show t
+
+instance Eq Type where
+  t1 == t2 = evalState (t1 `alphaEq` t2) M.empty
+    where alphaEq :: Type -> Type -> State (M.Map String String) Bool
+          alphaEq (TypeVariable v1) (TypeVariable v2)
+              = gets (M.lookup v1) >>= \case
+                 (Just v1') -> return $ v2 == v1'
+                 Nothing    -> return $ v2 == v1
+          alphaEq (FunctionType t1 t2) (FunctionType t3 t4)
+              = do
+                m <- get
+                b <- t1 `alphaEq` t3
+                put m
+                (b &&) <$> t2 `alphaEq` t4
+          alphaEq (UniversalType v1 t1) (UniversalType v2 t2)
+              = modify (M.insert v1 v2) >> t1 `alphaEq` t2
 
 
 data ErrorType
@@ -80,7 +98,7 @@ typeCheck (TypeAbstraction x t)
       type2 <- typeCheck t
       return $ UniversalType x type2
 typeCheck (TypeApplication t (TypeVariable var))
-    = do -- special case: look for var-def in ctx
+    = do -- special case: look for var-def in ctx to unfold definition
       ctx <- get
       case M.lookup var ctx of
         (Just typ1) -> typeCheck t >>= \typ' ->
