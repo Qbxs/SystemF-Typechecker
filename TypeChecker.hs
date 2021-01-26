@@ -136,8 +136,8 @@ vars (UniversalType s t) = vars t -- S.delete s -- for free vars
 -- | Generate new variable name that is not present in type
 fresh :: String -> Type -> String
 fresh str t = if isDigit $ last new
-              then new <> case lookup (last new) replace of
-                      (Just d) -> d
+              then case lookup (last new) replace of
+                      (Just d) -> init new <> d
                       Nothing  -> error "unexpected error in fresh"
               else new <> "0"
    where new = maximum $ S.toList $ S.filter (prefix str) (vars t) -- should never be empty
