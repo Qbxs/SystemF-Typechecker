@@ -3,6 +3,8 @@
 module TypeChecker where
 
 import qualified Data.Map as M
+import qualified Data.Set as S
+import Data.Char
 import Control.Monad.State
 import Control.Monad.Except
 
@@ -114,8 +116,34 @@ subst t s (TypeVariable str) | s == str  = t
                              | otherwise = TypeVariable str
 subst t s (FunctionType t1 t2) = FunctionType (subst t s t1) (subst t s t2)
 subst t s (UniversalType var t') | s == var  = UniversalType var t'
+                                 | var `inType` t = let new = fresh var t'
+                                                    in subst t s $ UniversalType new $ subst (TypeVariable new) var t'
                                  | otherwise = UniversalType var $ subst t s t'
 
+-- | is variable already used in type?
+inType :: String -> Type -> Bool
+inType s (FunctionType t1 t2) = inType s t1 || inType s t2
+inType s (UniversalType _ t') = inType s t'
+inType s (TypeVariable var)   = s == var
+
+-- | get all (free and bound) variables
+vars :: Type -> S.Set String
+vars (TypeVariable s) = S.singleton s
+vars (FunctionType t1 t2) = vars t1 `S.union` vars t2
+vars (UniversalType s t) = vars t -- S.delete s -- for free vars
+
+-- | Generate new variable name that is not present in type
+fresh :: String -> Type -> String
+fresh str t = if isDigit $ last new
+              then new <> case lookup (last new) replace of
+                      (Just d) -> d
+                      Nothing  -> error "unexpected error in fresh"
+              else new <> "0"
+   where new = maximum $ S.toList $ S.filter (prefix $ head str) (vars t)
+         replace = zip ['0'..'9'] (map (:[]) ['1'..'9'] ++ ["10"])
+         prefix :: Char -> String -> Bool
+         prefix _ []    = False
+         prefix c (d:_) = c == d
 
 -- | Eval typechecker with empty context, no runtime exceptions
 evalTypeCheck :: Term -> Either ErrorType Type
