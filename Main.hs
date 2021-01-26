@@ -9,9 +9,7 @@ import Parser
 
 
 main :: IO ()
-main = do
-  setTitle "SystemF - Repl"
-  evalStateT loop richCtx
+main = setTitle "SystemF - Repl" >> evalStateT loop richCtx
 
 -- | REPL with variable context
 loop :: StateT (M.Map String Type) IO ()
@@ -23,16 +21,10 @@ loop = do
     Left err -> lift (print err) >> loop
     Right stmt -> evalStmt stmt >> loop
 
--- | Set and reset color for a given IO-action
-colorize :: Color -> IO () -> IO ()
-colorize c m = do
-  setSGR [SetColor Foreground Vivid c]
-  m
-  setSGR [Reset]
 
 -- | evaluate a Statement
 evalStmt :: Stmt -> StateT (M.Map String Type) IO ()
-evalStmt Quit = lift exitSuccess
+evalStmt Quit = lift $ putStrLn "Bye bye" >> exitSuccess
 evalStmt List = gets M.toList >>= \vars -> lift $ mapM_ list vars
 evalStmt Reload = put richCtx
 evalStmt Purge = put M.empty
@@ -49,6 +41,11 @@ evalStmt (Check term) = do
         lift $ colorize Green $ putStr " : "
         lift $ print type'
 
+-- | Set and reset color for a given IO-action
+colorize :: Color -> IO () -> IO ()
+colorize c m = setSGR [SetColor Foreground Vivid c] >> m >> setSGR [Reset]
+
+-- | Helper function to print context
 list :: (String,Type) -> IO ()
 list (var,typ) = putStr var >> colorize Green (putStr " : ") >> print typ
 
