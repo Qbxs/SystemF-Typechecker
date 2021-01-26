@@ -8,7 +8,7 @@
 `λA.λa:A.((λX.λx:X.x [A]) a)`
 
 ## self application
-`λx:∀X.(X->X).((x [∀X.(X->X)]) x)`
+`\f:forall X.(X->X).((f [forall X.(X->X)]) f)`
 
 ## exercise 1 from assignment
 `λC.(((const [Nat]) [C]) five)`
