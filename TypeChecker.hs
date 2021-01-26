@@ -125,6 +125,7 @@ inType :: String -> Type -> Bool
 inType s (FunctionType t1 t2) = inType s t1 || inType s t2
 inType s (UniversalType _ t') = inType s t'
 inType s (TypeVariable var)   = s == var
+-- inType s t = s `S.elem` vars t
 
 -- | get all (free and bound) variables
 vars :: Type -> S.Set String
@@ -139,11 +140,12 @@ fresh str t = if isDigit $ last new
                       (Just d) -> d
                       Nothing  -> error "unexpected error in fresh"
               else new <> "0"
-   where new = maximum $ S.toList $ S.filter (prefix $ head str) (vars t)
+   where new = maximum $ S.toList $ S.filter (prefix str) (vars t) -- should never be empty
          replace = zip ['0'..'9'] (map (:[]) ['1'..'9'] ++ ["10"])
-         prefix :: Char -> String -> Bool
-         prefix _ []    = False
-         prefix c (d:_) = c == d
+         prefix :: String -> String -> Bool
+         prefix [] [] = True
+         prefix _  [] = False
+         prefix (c:pre) (c':str) = c == c' && prefix pre str
 
 -- | Eval typechecker with empty context, no runtime exceptions
 evalTypeCheck :: Term -> Either ErrorType Type
