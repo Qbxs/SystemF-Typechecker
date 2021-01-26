@@ -98,13 +98,13 @@ typeCheck (TypeAbstraction x t)
       modify (M.insert x $ TypeVariable x)
       type2 <- typeCheck t
       return $ UniversalType x type2
-typeCheck (TypeApplication t (TypeVariable var)) -- special case: look for var-def in ctx to unfold definition
-    = gets (M.lookup var) >>= \case
-        (Just typ1) -> typeCheck t >>= \typ' ->
-                       case typ' of
-                         (UniversalType x t12) -> return $ subst typ1 x t12
-                         _ -> throwError $ ArgMissmatch typ1 typ'
-        Nothing -> throwError $ UnBoundType $ TypeVariable var
+-- typeCheck (TypeApplication t (TypeVariable var)) -- special case: look for var-def in ctx to unfold definition
+--     = gets (M.lookup var) >>= \case
+--         (Just typ1) -> typeCheck t >>= \typ' ->
+--                        case typ' of
+--                          (UniversalType x t12) -> return $ subst typ1 x t12
+--                          _ -> throwError $ ArgMissmatch typ1 typ'
+--         Nothing -> throwError $ UnBoundType $ TypeVariable var
 typeCheck (TypeApplication t typ)
     = typeCheck t >>= \typ' -> case typ' of
         (UniversalType x t12) -> return $ subst typ x t12
@@ -140,8 +140,9 @@ fresh str t = if isDigit $ last new
                       (Just d) -> init new <> d
                       Nothing  -> error "unexpected error in fresh"
               else new <> "0"
-   where new = maximum $ S.toList $ S.filter (prefix str) (vars t) -- should never be empty
+   where new = safeMax $ S.toList $ S.filter (prefix str) (vars t) -- should never be empty
          replace = zip ['0'..'9'] (map (:[]) ['1'..'9'] ++ ["10"])
+         safeMax = foldr max str
          prefix :: String -> String -> Bool
          prefix [] [] = True
          prefix _  [] = False

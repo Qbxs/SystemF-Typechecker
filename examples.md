@@ -8,10 +8,13 @@
 `λA.λa:A.((λX.λx:X.x [A]) a)`
 
 ## self application
-`\f:forall X.(X->X).((f [forall X.(X->X)]) f)`
+`\f:∀X.(X → X).((f [∀X.(X → X)]) f)`
 
 ## exercise 1 from assignment
 `λC.(((const [Nat]) [C]) five)`
 
 ## exercise 2 from assignment
-`\X.\f:forall Y.(Y -> Y).((f [(X -> X)]) (f [X]))`
+`λX.λf:∀Y.(Y->Y).((f [(X->X)]) (f [X]))`
+
+## capture-free substitution
+`λB.(λA.λB.λx:A.x [B])`
