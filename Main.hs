@@ -33,13 +33,13 @@ evalStmt (Assignment var typ) = modify $ M.insert var typ
 evalStmt (Check term) = do
   ctx <- get
   case evalTypeCheck term ctx of
-      Left err -> do
-        lift $ putStrLn ("Cannot infere type of " <> show term)
-        lift $ colorize Red $ print err
-      Right type' -> do
-        lift $ putStr $ show term
-        lift $ colorize Green $ putStr " : "
-        lift $ print type'
+      Left err -> lift $ do
+        putStrLn ("Cannot infere type of " <> show term)
+        colorize Red $ print err
+      Right type' -> lift $ do
+        putStr $ show term
+        colorize Green $ putStr " : "
+        print type'
 
 -- | Set and reset color for a given IO-action
 colorize :: Color -> IO () -> IO ()
