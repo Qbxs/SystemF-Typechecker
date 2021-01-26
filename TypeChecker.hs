@@ -147,9 +147,9 @@ fresh str t = if isDigit $ last new
          prefix _  [] = False
          prefix (c:pre) (c':str) = c == c' && prefix pre str
 
--- | Eval typechecker with empty context, no runtime exceptions
-evalTypeCheck :: Term -> Either ErrorType Type
-evalTypeCheck t = evalState (runExceptT $ typeCheck t) richCtx
+-- | Eval typechecker with given context, no runtime exceptions
+evalTypeCheck :: Term -> M.Map String Type -> Either ErrorType Type
+evalTypeCheck t = evalState (runExceptT $ typeCheck t)
 
 -- | Default context, from exercise 2
 defaultCtx :: M.Map String Type
