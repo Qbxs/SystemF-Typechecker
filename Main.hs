@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Main where
 
 import System.Console.ANSI
@@ -16,7 +18,6 @@ loop :: StateT (M.Map String Type) IO ()
 loop = do
   lift $ colorize Blue $ putStr "λF> "
   str <- lift getLine
-  ctx <- get
   case parseStmt str of
     Left err -> lift (print err) >> loop
     Right stmt -> evalStmt stmt >> loop
@@ -30,9 +31,8 @@ evalStmt Reload = put richCtx
 evalStmt Purge = put M.empty
 evalStmt Help = lift help
 evalStmt (Assignment var typ) = modify $ M.insert var typ
-evalStmt (Check term) = do
-  ctx <- get
-  case evalTypeCheck term ctx of
+evalStmt (Check term) = gets (evalTypeCheck term)
+  >>= \case
       Left err -> lift $ do
         putStrLn ("Cannot infere type of " <> show term)
         colorize Red $ print err
