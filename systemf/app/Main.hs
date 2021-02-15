@@ -3,6 +3,7 @@
 module Main where
 
 import System.Console.ANSI
+import System.IO
 import Control.Monad.State
 import qualified Data.Map as M
 import System.Exit (exitSuccess)
@@ -17,6 +18,7 @@ main = setTitle "SystemF - Repl" >> evalStateT loop richCtx
 loop :: StateT (M.Map String Type) IO ()
 loop = do
   lift $ colorize Blue $ putStr "λF> "
+  lift $ hFlush stdout
   str <- lift getLine
   case parseStmt str of
     Left err -> lift (print err) >> loop
@@ -50,12 +52,13 @@ list :: (String,Type) -> IO ()
 list (var,typ) = putStr var >> colorize Green (putStr " : ") >> print typ
 
 help :: IO ()
-help = do
-  putStrLn "Type a System F term to check its type."
-  putStrLn "Or assign a type to a variable with ':'."
-  putStrLn "Options:"
-  putStrLn "  :q to exit"
-  putStrLn "  :r to reload environment"
-  putStrLn "  :p to purge environment"
-  putStrLn "  :l to list all bindings in environment"
-  putStrLn "  :h to display this information"
+help = mapM_ putStrLn
+  [ "Type a System F term to check its type."
+  , "Or assign a type to a variable with ':'."
+  , "Options:"
+  , "  :q to exit"
+  , "  :r to reload environment"
+  , "  :p to purge environment"
+  , "  :l to list all bindings in environment"
+  , "  :h to display this information"
+  ]
